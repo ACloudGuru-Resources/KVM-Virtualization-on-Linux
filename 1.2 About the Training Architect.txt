@@ -1,0 +1,39 @@
+# Description
+
+In this lesson, you will get to know your Training Architect, Tom Dean.
+
+### Get to know your Training Architect, Tom Dean.
+
+#### Reference Links
+[Tom Dean on LinkedIn](https://www.linkedin.com/in/tomdeanjr/)
+
+### Tom Dean - Linux Training Architect
+
+**Interests:**
+    
+- Boating
+- Obsolete electronics 
+- Music
+- Household projects
+
+**Started on Apple IIs in the early 1980s:**
+
+- Programming in BASIC
+- Hacking in general
+
+**Purdue University graduate:**
+
+- First exposure to UNIX on Sequent 386-based systems
+- First exposure to the Internet (just before WWW was widespread)
+
+***25 years experience in Information Technology***
+
+- Focus on Linux / UNIX
+- Traditional and virtualized infrastructure
+- Managed teams and projects
+- Exposure to many industries/environments
+- Have worked with Linux since 1997
+- Main focus has been on RedHat distributions
+- Passion for Linux and Open Source 
+
+#### *Thank you for allowing me to assist you with your journey!*

@@ -1,0 +1,103 @@
+We've looked at two ways we can use `libvirt` to administer virtual machines via QEMU/KVM, Virtual Machine Manager (`virt-manager`), and Cockpit.  While these were easy to use, sometimes we need the granularity and power that command-line tools provide.  Fortunately for us, `libvirt` has a set of command-line tools to round out our toolkit.  In this lesson, we will take a look at the `virt-v2v` utility, which allows us to create a new virtual machine from a variety of source disk image files.
+
+#### Reference Links
+
+[Importing VMs to KVM with virt-v2v](https://www.redhat.com/en/blog/importing-vms-kvm-virt-v2v)
+[CentOS 7 Generic Cloud Image](https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.raw.tar.gz)
+
+### Creating a Virtual Machine from a RAW Disk File
+
+Sometimes you don't want to install a virtual machine from scratch.  Fortunately, you don't have to!
+
+We're going to use a CentOS 7 Generic Cloud image file to stand up a new VM.
+
+#### Download the CentOS 7 Generic Cloud Image File
+
+1. First, we need to download the CentOS 7 Generic Cloud image file.  This file is in RAW disk format:
+    ```
+    curl -kL https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.raw.tar.gz -o /tmp/CentOS-7-x86_64-GenericCloud.raw.tar.gz
+    ```
+2. Next, we need to uncompress the file:
+    ```
+    cd /tmp
+    ```
+    ```
+    tar xvzf CentOS-7-x86_64-GenericCloud.raw.tar.gz
+    ```
+    ```
+    cd ; clear
+    ```
+
+#### Edit the CentOS 7 Generic Cloud Image File
+
+By default, we can't log directly in to the Generic Cloud server with a username and password.  
+
+1. We need to generate a new encrypted `root` password.  In this example, I'm using `clouduser` as my password.
+    ```
+    openssl passwd -1 clouduser
+    ```
+2. Next, we need to edit some files on the RAW disk file.  We will change the `root` password and enable SSH login as `root`.  Execute the `guestfish` utility against the RAW disk file:
+    ```
+    sudo guestfish --format=raw -a /tmp/CentOS-7-x86_64-GenericCloud-2003.raw
+    ```
+    Your filename could be different, adjust as necessary.
+
+3. Once we're inside the `guestfish` utility, execute:
+    ```
+    ><fs> run
+    ><fs> list-filesystems
+    ><fs> mount /dev/sda1 /
+    ><fs> vi /etc/shadow
+    ```
+4.Replace the current `root` password with the encrypted password you generated above.  It's the second field in the line for `root`.  Save and quit.
+    ```
+    ><fs> vi /etc/ssh/sshd_config
+    ```
+5. Uncomment `PermitRootLogin Yes`.  Save and quit.
+
+6. Exit `guestfish`:
+    ```
+    ><fs> quit
+    ```
+
+#### Import the CentOS 7 Generic Cloud Image File
+
+1. List the current guests:
+    ```
+    sudo virsh list --all
+    ```
+2. Import the RAW disk file using `virt-v2v`:
+    ```
+    sudo virt-v2v -i disk /tmp/CentOS-7-x86_64-GenericCloud-2003.raw -o libvirt -of qcow2 -os Virtual_Machines -n default -on centos-7-generic-cloud-vm
+    ```
+3. Now, let's take a look at the list of guests:
+    ```
+    sudo virsh list --all
+    ```
+4. Next, start the virtual machine:
+    ```
+    sudo virsh start centos-7-generic-cloud-vm
+    ```
+
+#### Connect to the Console
+
+1. Head on over to your web browser and log in to Cockpit.  
+2. Navigate to the *Virtual Machines* pane, click on your new `centos-7-generic-cloud-vm` VM, and click on the *Console* tab.  
+3. Log in to the VM as `root`.
+4. Let's patch the VM:
+    ```
+    yum -y update
+    ```
+5. When patching is complete, go ahead and shut the VM down.
+
+Congratulations!  You just imported a new virtual machine from a RAW disk file!
+
+### In this lesson, we covered:
+
+- Downloading the CentOS 7 Generic Cloud RAW disk image
+- Editing the disk image using guestfish:
+  - Changing ‘root’ password
+  - Enabling SSH login as root
+- Using `virt-v2v` to import the RAW disk image
+- Connecting to the console using Cockpit:
+  - Patching the new VM

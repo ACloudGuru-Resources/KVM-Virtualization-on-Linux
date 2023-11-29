@@ -1,0 +1,210 @@
+Before we can dive in and start working with oVirt, we will need to configure a CentOS 7 environment.  In this lesson, we will walk through setting up a 'Minimal' installation of CentOS 7.
+
+#### Reference Links
+
+**Download CentOS 7:**
+
+[CentOS 7 \| Mirrors List](http://isoredirect.centos.org/centos/7/isos/x86_64/)
+[Downloading CentOS :: CentOS Docs Site](https://docs.centos.org/en-US/centos/install-guide/downloading/)
+
+**Create USB Key:**
+
+[Making Installation USB Media on Linux :: CentOS Docs Site](https://docs.centos.org/en-US/centos/install-guide/Making_Media_USB_Linux/)
+[Making Installation USB Media on Windows :: CentOS Docs Site](https://docs.centos.org/en-US/centos/install-guide/Making_Media_USB_Windows/)
+[Making Installation USB Media on Mac OS X :: CentOS Docs Site](https://docs.centos.org/en-US/centos/install-guide/Making_Media_USB_Mac/)
+
+### Configuring the CentOS 7 Lesson Environment
+
+#### For this section, I will use a bare-metal environment on two Dell Precision T3500 workstations
+
+**Specifications:**
+
+- Intel Xeon (6 core)
+- 24GB RAM
+- 1TB RAID-1 Storage
+- 3TB additional hard drive
+- Two-gigabit network interfaces with second (private) network configured
+- CentOS 7 (Minimal Installation)
+
+These are approximately ten-year-old machines, and they work fine for this exercise.
+
+#### First, you will need to download CentOS 7 and create installation media
+
+1. Download the CentOS 7 Minimal ISO.  We're going to work relative to this, so it's important you start with the Minimal installer.
+
+2. Next, you will need to decide what kind of installation media you are going to use and create it.  I usually use a USB installation as it is easier and more environmentally-friendly.  If you need to create a CD or DVD from the ISO file, you can do that as well.
+
+#### Start the installation
+
+1. Either plug in your USB installer key or insert your CD/DVD into the drive and boot your computer.
+
+2. On the way up, we want to enter the BIOS to confirm that hardware-assisted virtualization is enabled.  I'm not going to go into detail on how you do that as there are numerous ways, depending on your particular computer.  Go get a copy of the hardware manual and read up.  It will tell you what you need to enable.
+
+3. Once you exit the BIOS (save your changes!) you will want to select a boot menu —if your computer has that option— and boot from your installation media.
+
+4. When the CentOS installer starts, you can skip the media check if you wish.
+
+#### Installing CentOS 7
+
+1. With this CentOS 7 installer, the only package choice is *Minimum*.  The installer is similar to the installer we used to install CentOS 8, so setup will be the same.
+
+2. Set a `root` password and create the `cloud_user` user during installation.
+
+#### Post-installation tasks
+
+1. After the system has rebooted, log in as 'cloud_user'.  We need to patch the system:
+    ```
+    sudo yum -y update
+    ```
+2. After patching is complete, reboot the system:
+    ```
+    sudo systemctl reboot
+    ```
+
+#### Configure Storage and NFS Server
+
+After the system has rebooted, log in as `cloud_user`.  We're going to configure four storage locations, one for the virtual machine images, one for the hosted engine, one for the export domain, and one for the ISO store.  I'm going to create new logical volumes and file systems, but you can just create directories to use if you'd like.
+
+#### Configure the storage:
+
+1. Let's create the mount points:
+    ```
+    sudo mkdir /media/ISO
+    ```
+    ```
+    sudo mkdir /media/VM_Store
+    ```
+    ```
+    sudo mkdir /media/HE_Store
+    ```
+    ```
+    sudo mkdir /media/Export_Store
+    ```
+2. Next, I'm going to create some new logical volumes using an additional 3TB disk that is in the system.  This disk is `/dev/sdc`.
+
+3. Clean this disk:
+    ```
+    sudo wipefs -a /dev/sdc
+    ```
+4. Add this disk to LVM:
+    ```
+    sudo pvcreate -ff /dev/sdc
+    ```
+5. Let's check our work:
+    ```
+    sudo pvs
+    ```
+6, Next, let's add `/dev/sdc` to a new volume group, 'ovirt':
+    ```
+    sudo vgcreate ovirt /dev/sdc
+    ```
+7. Let's check our work:
+    ```
+    sudo vgs
+    ```
+8. Create our logical volumes:
+    ```
+    sudo lvcreate -L 200g -n ISO ovirt
+    ```
+    ```
+    sudo lvcreate -L 1T -n VM_Store ovirt
+    ```
+    ```
+    sudo lvcreate -L 200g -n HE_Store ovirt
+    ```
+    ```
+    sudo lvcreate -L 200g -n Export_Store ovirt
+    ```
+9. Let's check our work:
+    ```
+    sudo lvs
+    ```
+10. Next, let's format the new logical volumes:
+    ```
+    sudo mkfs.xfs /dev/mapper/ovirt-ISO
+    ```
+    ```
+    sudo mkfs.xfs /dev/mapper/ovirt-VM_Store
+    ```
+    ```
+    sudo mkfs.xfs /dev/mapper/ovirt-HE_Store
+    ```
+    ```
+    sudo mkfs.xfs /dev/mapper/ovirt-Export_Store
+    ```
+11. Now we will need to edit `/etc/fstab` in order to add the mounts for our new logical volumes.
+    ```
+    sudo vi /etc/fstab
+    ```
+12. Add the entries for the new mount, then save and exit.
+
+13. Now, let's mount our new filesystems:
+    ```
+    sudo mount -a
+    ```
+14. Let's check our work:
+    ```
+    df -h | grep media
+    ```
+
+#### Configure the NFS exports:
+
+1. First, we will need to install the packages required for the NFS server:
+    ```
+    sudo yum -y install nfs-utils
+    ```
+2. Enable and start the NFS services:
+    ```
+    sudo systemctl enable rpcbind --now
+    ```
+    ```
+    sudo systemctl enable nfs-server --now
+    ```
+    ```
+    sudo systemctl enable nfs-lock --now
+    ```
+    ```
+    sudo systemctl enable nfs-idmap --now
+    ```
+3. We will need to configure the firewall to allow NFS:
+    ```
+    sudo firewall-cmd --permanent --zone=public --add-service=nfs
+    ```
+    ```
+    sudo firewall-cmd --permanent --zone=public --add-service=mountd
+    ```
+    ```
+    sudo firewall-cmd --permanent --zone=public --add-service=rpc-bind
+    ```
+    ```
+    sudo firewall-cmd --reload
+    ```
+4. Let's check our work:
+    ```
+    sudo firewall-cmd --list-all
+    ```
+5. Next, we need to create `/etc/exports` and add our new filesystems:
+    ```
+    sudo vi /etc/exports
+    ```
+6. Add the following lines:
+    ```
+    /media/ISO    192.168.10.0/24(rw,sync,no_root_squash,no_all_squash)
+    /media/VM_Store    192.168.10.0/24(rw,sync,no_root_squash,no_all_squash)
+    /media/HE_Store    192.168.10.0/24(rw,sync,no_root_squash,no_all_squash)
+    /media/Export_Store    192.168.10.0/24(rw,sync,no_root_squash,no_all_squash)
+    ```
+7. Save, and exit.
+
+8. Restart the NFS server:
+    ```
+    sudo systemctl restart nfs-server
+    ```
+9. Let's check our work:
+    ```
+    showmount -e
+    ```
+10. We should see the four exports we just configured.  We're good to proceed!
+
+#### In this Lesson
+We covered installing and configuring the CentOS 7 lesson environment. Let's get to installing and configuring oVirt!

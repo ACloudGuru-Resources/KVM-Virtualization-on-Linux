@@ -1,0 +1,120 @@
+We're going to use our configured oVirt environment to create some guest virtual machines.  We will explore creating a CentOS 8 virtual machine using the oVirt Administration Portal and set up a new CentOS 7 guest from a template using the oVirt VM Portal.
+
+#### Reference Links
+
+**ISO Downloads:**
+
+[CentOS 7 \| Mirrors List](http://isoredirect.centos.org/centos/7/isos/x86_64/)
+[CentOS 8 \| Mirrors List](http://isoredirect.centos.org/centos/8/isos/x86_64/)
+
+### Creating a Virtual Machine Using oVirt
+
+#### Connecting to the oVirt Engine Web Interface
+
+In a web browser, navigate to `https://manager-fqdn`, replacing `manager-fqdn` with the FQDN for your oVirt hosted engine.  If you're not already logged in, log in with the `admin` user and the password you set when you configured the hosted engine.  Enter the *Administration Portal*.
+
+#### Uploading the ISO install images to the ISO storage domain
+
+Before we can create a new virtual machine, we will need to install media in our oVirt environment.  The install ISO files must be uploaded to the ISO storage domain.
+
+1. I've copied two ISO files from my computer to the hosted engine using `scp`:
+```
+scp Downloads/CentOS-* root@ovirt:~
+```
+That puts the ISO files into the `/root` directory on the hosted engine.
+
+2. Now that the files are on the hosted engine, log in as `root` via SSH.  By default, we will be in the `/root` directory.
+
+3. We will use the `engine-iso-uploader` command to upload the ISO files into the ISO domain:
+```
+engine-iso-uploader --iso-domain=ISO upload CentOS-7-x86_64-Minimal-2003.iso CentOS-8.1.1911-x86_64-boot.iso
+```
+4. The name of your ISO file may be different, so adjust as necessary.
+
+5. Now, go to the oVirt web interface and click on **Storage**, then **Domains**.  Click on the **ISO** link, then click on the *Images* tab.  You should see the ISO files we just uploaded.
+
+#### Creating a new CentOS 8 virtual machine using the oVirt Administration Portal
+
+1. Navigate to *Compute* and then to *Virtual Machines*.  Click on the **New** button along the top.  This will open the *New Virtual Machine* wizard.
+
+2. Fill out the information in the *General* pane:
+
+- *Cluster:* Default
+- *Template:* Blank
+- *Operating System:* Red Hat Enterprise Linux 8.X x64
+- *Instance Type:* Custom
+- *Optimized for:* Server
+- *Name:* centos-8-wms1-chicago
+- *Description:* CentOS 8 WMS1 - Chicago
+- *Comment:* CentOS 8 WMS1 - Chicago
+- *VM ID:* BLANK
+- *Stateless:* Unchecked
+- *Start in Pause Mode:* Unchecked
+- *Delete Protection:* Unchecked
+
+
+3. Fill out *Instance Images - Create Virtual Disk*:
+
+4. Next, under *Instance Images*, click the **Create** button.  Set the size, choose the correct Storage Domain, and leave the rest as default.
+
+5. Attach the virtual NICs:
+
+- Set `nic1` to the `ovirtmgmt` network.
+- **OPTIONAL:** Set `nic2` to the `WMS-Private` network.
+
+6. Click on **Show Advanced Options**.
+
+7. Tour the tabs.
+
+8. On *System*, set the memory and CPUs.
+
+9. Under *Boot Options*, attach the CentOS 8 ISO and select **Enable menu to select boot device**.
+
+10. Click on **OK** in the lower right-hand corner.
+
+11. Highlight the `centos-8-wms1-chicago` virtual machine and click on the **Run** button.  In the upper right-hand corner, click on **Console**.  Open the file with the remote viewer.
+
+12. Walk through the CentOS 8 installer and install a *Minimal* system.  When the installation is complete, click **Reboot**.  Disconnect from the console.
+
+#### Creating a new CentOS 7 virtual machine using the oVirt VM Portal
+
+1. Go back to the main oVirt page by clicking on **oVirt** in the upper left-hand corner.  Enter the *VM Portal*. We are going to create a new virtual machine from the CentOS 7 template we created earlier, using the **VM Portal**.
+
+2. In the 'VM Portal', in the upper right-hand corner, click the **Create Virtual Machine** button.  This will open the **Create A New Virtual Machine** wizard.
+    - *Name:* centos-7-wms1-chicago
+    - *Description:* CentOS 7 WMS1 - Chicago
+    - *Cluster:* Default
+    - *Template:* Your CentOS 7 template from earlier
+    - *Operating System:* Red Hat Enterprise Linux 7.x x64
+    - *Defined Memory:* 2048 (or what you can spare - at least 1024)
+    - *Total Virtual CPUs:* 2 (or what you can spare - at least 1)
+    - *Boot Menu:* OFF
+    - *Boot Sequence:*
+      - *First Device:* Hard Disk
+      - *Second Device:* [None]
+    - *Cloud-Init:* ON
+      - *Hostname:* centos-7-wms1-chicago
+      - *SSH Authorized Keys:* PASTE YOUR PUBLIC KEY HERE
+    - *Icon:* Ignore this
+
+3. Click on **Create VM**.  Let oVirt do its work.
+
+4. Once the VM has been created, add a network interface on the `ovirtmgmt` network in *Network Interfaces*.
+
+5. Click on **Run** to start the VM.  Once the VM is up, click on **Console**.  See how you can attach to the VM console.  We can't log in directly here, as we don't have any passwords set.  We do have an SSH key configured on the system, though, so let's use that.
+
+6. To log in, we will make an SSH connection as `centos` to the IP address of the VM from the machine we provided the public key for, as the user who provided the key.
+
+7. Now that we're logged in, let's patch the system:
+```
+sudo yum -y update
+```
+8. Once the virtual machine is patched, log out of the SSH connection.  Go back to your browser.  Click on **Shutdown** in the upper right-hand corner.
+
+9. Go back to the main oVirt page by clicking on **oVirt** in the upper left-hand corner.
+
+### In this lesson, we covered:
+
+- Uploading the ISO install images to the ISO storage domain
+- Creating a new CentOS 8 virtual machine using the oVirt Administration Portal
+- Creating a new CentOS 7 virtual machine using the oVirt VM Portal

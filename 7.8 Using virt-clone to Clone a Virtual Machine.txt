@@ -1,0 +1,72 @@
+We've looked at two ways we can use `libvirt` to administer virtual machines via QEMU/KVM, Virtual Machine Manager (`virt-manager`), and Cockpit.  While these were easy to use, sometimes we need the granularity and power that command-line tools provide.  Fortunately for us, `libvirt` has a set of command-line tools to round out our toolkit.  In this lesson, we will take a look at how to use the `virt-clone` command to clone a virtual machine.
+
+#### Reference Links
+
+[virt-clone(1) - Linux man page](https://linux.die.net/man/1/virt-clone)
+
+### Using 'virt-clone' to Clone a Virtual Machine
+
+In this lesson, we're going to clone our `centos-7-cli-vm` and patch it so we can turn it into a template to for new CentOS 7 VMs for our DBA team.
+
+#### Clone a virtual machine
+
+Before we clone our virtual machine, we need to shut it down.
+
+1. Check the status of the `centos-7-cli-vm` guest:
+    ```
+    sudo virsh list --all
+    ```
+2. Shut the `centos-7-cli-vm` virtual machine down (if it is running):
+    ```
+    sudo virsh shutdown centos-7-cli-vm
+    ```
+3. Confirm that the virtual machine is shut down:
+    ```
+    sudo virsh list --all
+    ```
+
+#### Start the clone
+
+We're going to clone our virtual machine so we can turn the clone into a template.  This preserves our original VM in case something goes wrong during the template phase of our work.
+
+Clone our `centos-7-cli-vm` guest, with the clone name of `centos-7-db-template`, including *all* the virtual disks:
+```
+sudo virt-clone --original=centos-7-cli-vm --name=centos-7-db-template --auto-clone
+```
+
+#### Patch the cloned virtual machine
+
+1. Start the new clone:
+    ```
+    sudo virsh start centos-7-db-template
+    ```
+2. Log in to the virtual machine using `virsh console` as `cloud_user`:
+    ```
+    sudo virsh console centos-7-db-template
+    ```
+3. Patch the VM:
+    ```
+    sudo yum -y update
+    ```
+4. When the patching is complete, log out.  Use **CTRL** + **]** to exit the `virsh` console.
+
+#### Shut down the cloned virtual machine
+
+1. Shut the `centos-7-db-template` virtual machine down:
+    ```
+    sudo virsh shutdown centos-7-db-template
+    ```
+2. Check the status of all guests:
+    ```
+    sudo virsh list --all
+    ```
+
+We now have a patched virtual machine that we can create a template from!
+
+### In this lesson, we covered:
+
+- Cloning a virtual machine using `virt-clone`
+- Preparing the clone to be made into a template:
+  - Starting the clone
+  - Patching the clone
+  - Shutting the clone down

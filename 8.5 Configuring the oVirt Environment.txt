@@ -1,0 +1,115 @@
+Now that we know our way around the oVirt interface, we're going to configure some resources that we did not get configured when we set up the hosted engine.  We will add a private virtual network, some storage domains, and a second (hypervisor) host.
+
+#### Reference Links
+
+**Adding Networks:**
+[Logical Networks \| oVirt](https://www.ovirt.org/documentation/admin-guide/chap-Logical_Networks.html)
+
+**Adding Storage Domains:**
+[Storage \| oVirt](https://www.ovirt.org/documentation/admin-guide/chap-Storage.html)
+
+**Adding Hosts:**
+[Hosts \| oVirt](https://www.ovirt.org/documentation/admin-guide/chap-Hosts.html)
+
+### Configuring the oVirt Environment
+
+Before our oVirt environment is ready to use, we will need to configure some additional resources.
+
+#### Connect to the oVirt Engine Web Interface
+
+In a web browser, navigate to `https://manager-fqdn`, replacing `manager-fqdn` with the FQDN for your oVirt hosted engine.  If you're not already logged in, log in with the `admin` user and the password you set when you configured the hosted engine.  Enter the **Administration Portal**.
+
+#### Adding a Private Virtual Network
+
+Our WMS team has asked us to create a 'private' network for the warehouse management systems to communicate on the backend.  We will attach our virtual machines to this network when we create them.
+
+Navigate to the *Network* tab, and select **Networks**.  Click on the **New** button in the upper right-hand corner.  You will be presented with the *New Logical Network* wizard.
+
+1. Let's fill in some information:
+    - **General:**
+        - *Name:* WMS-Private
+        - *Description:* WMS Private Network
+        - *Comment:* WMS Private Network
+
+2. Leave the defaults on *Network Parameters*.
+    - **Cluster:** Use defaults.
+    - **vNIC Profiles:** Use defaults.
+3. Click **OK**.  
+
+We need to attach our `WMS-Private` network to our second physical interface on the *private* physical network.  This will allow us to "extend" the `WMS-Private` network to other hosts as we add them.
+
+1. Navigate to *Compute*, then to *Hosts*.  
+2. Click on your host, then select the *Network Interfaces* tab.  
+3. Click on the **Setup Host Networks** in the upper right-hand corner, then drag the *WMS-Private* network to a physical interface. In my case, I have a second physical network, but if you don't, just skip the second network for now, and don't use it.
+
+We now have our `WMS-Private` network and can attach virtual machines to it.
+
+#### Adding Storage Domains
+
+When we configured the hosted engine, we created the `HE_Store` storage domain to store the hosted engine image. 
+
+1. We are now going to configure three more storage pools:
+    - `VM_Store` Domain:
+      - A Data domain that provides storage for our virtual machine images.
+    - `Export_Store` Domain:
+      - Temporary storage repositories that are used to copy and move images between data centers and oVirt environments.
+    - `ISO` Domain:
+      - Stores install images, disk images for import, etc.  Only one ISO domain can be added to a data center.
+
+2. Navigate to the *Storage* tab and select **Domains**.  
+3. Click on **New Domain**. 
+4. Let's add the `Export_Store` domain first.  Select a *Domain Function* of *Export*.  
+5. Name it `Export_Store`.  
+6. Set the *Export Path* to your NFS share (in my case, it is `curly.dean33.com:/media/Export_Store`).  Leave everything else as default. 
+7. Click **OK**.
+
+We now have the `VM_Store` data domain configured for our VM storage.  Now configure your ISO and Export domains.
+
+#### Adding a Second Host
+
+This is optional, but if you have another capable computer and would like to try it, go ahead!  The second computer will need a fresh CentOS 7 *Minimal* installation, like on the first host.  Use the same media you used for the first host.  You can skip configuring any of the NFS storage, as we already have them on the first host.  Just install CentOS 7 Minimal and patch it.
+
+1. Make sure that the system is up-to-date:
+    ```
+    sudo yum -y update
+    ```
+2. Reboot if you had any updates.
+
+3. Make an SSH connection to your new host.
+
+4. Create and exchange `root` SSH keys.
+
+5. On each host:
+
+    - Generate an SSH key:
+        ```
+        ssk-keygen
+        ```
+   - Copy the key to the other host:
+        ```
+        ssh-copy-id root@YOUR_OTHER_HOSTNAME_OR_IP
+        ```
+    - Enable the oVirt repository on the new host:
+        ```
+        sudo yum -y install https://resources.ovirt.org/pub/yum-repo/ovirt-release43.rpm
+        ```
+6. The installation won't work if the oVirt repository is not configured on the new host.
+
+7. Back in the oVirt *Administration Portal*, navigate to the *Compute* tab and click on **Hosts**.  Click on the **New** button in the upper right-hand corner.
+
+8. Walk through the *New Host* wizard, then click **OK**.  You can ignore any power management warnings.  If the SSH keys approach doesn't work, fall back on providing `root` credentials in the wizard.
+
+9. Let the installation progress.  You can monitor the installation via the *Alerts and Events* icon in the upper right-hand corner of the window.
+
+10. Once the installation is complete, navigate to the *Dashboard*.
+
+#### Review Dashboard Changes
+
+Check and see if the dashboard changed.  You should now see two hosts (if you added a second host) and the additional NFS Data Store we added.
+
+### In this lesson, we covered:
+
+- Adding a Private Virtual Network
+- Adding NFS Storage Domains:
+  - Local
+- Adding a Second Host

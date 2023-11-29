@@ -1,0 +1,211 @@
+In this lesson, we will cover, at a high level, what virtualization is. We will cover the history of virtualization, what virtualization is and how it works, and talk about a few ways virtualization can be used.
+
+#### Reference Links
+
+[What is virtualization? \| Red Hat](https://www.redhat.com/en/topics/virtualization/what-is-virtualization)
+[What is virtualization? \| Opensource.com](https://opensource.com/resources/virtualization)
+[What is virtualization technology & virtual machine? \| VMware](https://www.vmware.com/solutions/virtualization.html)
+[Virtualization - Wikipedia](https://en.wikipedia.org/wiki/Virtualization)
+[x86 virtualization - Wikipedia](https://en.wikipedia.org/wiki/X86_virtualization)
+[Hardware-assisted virtualization - Wikipedia](https://en.wikipedia.org/wiki/Hardware-assisted_virtualization)
+[A Brief History of Cloud Computing \| IBM](https://www.ibm.com/cloud/blog/cloud-computing-history)
+[History of Virtualization](https://www.idkrtm.com/history-of-virtualization/)
+[Network function virtualization - Wikipedia](https://en.wikipedia.org/wiki/Network_function_virtualization)
+
+### What is Virtualization?
+
+Red Hat: "Virtualization is technology that lets you create useful IT services using resources that are traditionally bound to hardware. It allows you to use a physical machine’s full capacity by distributing its capabilities among many users or environments."
+
+***Virtualization allows you to decouple your services and applications from the physical (server) layer, and deploy it in a more efficient and reliable manner than the traditional 1:1 service/application to physical server relationship.***
+
+#### History of Virtualization
+
+**Mainframes - the 1960s**
+
+- MIT announces Project MAC (Mathematics and Computation / Multiple Access Computer)
+  - $2 Million grant from DARPA
+  - IBM passes
+  - GE becomes vendor of choice
+- Bell Labs also has a need for multi-user system
+  - IBM designs CP-40 mainframe
+    - Evolves into CP-67
+    - CP/CMS (Control Program / Console Monitor System)
+      - 1968 - first release
+      - 1972 - first *stable* release
+      - CP runs on the mainframe
+        - Creates the VMs
+        - VMs run the CMS
+          - User interacts with these
+          - Each user gets their own operating system
+            - More stable and secure
+
+**Hardware Virtualization - late 80s and beyond**
+
+- Insignia Solutions
+  - SoftPC
+    - UNIX - 1987
+      - Run DOS applications on UNIX Workstation
+    - Mac - 1989
+      - Could run DOS and Windows applications
+- Apple / Connectix
+  - Virtual PC - 1997
+    - Run Windows on Mac
+- VMWare
+  - VMWare Workstation - 1999
+    - Initially ran on Windows
+  - ESX/GSX Server - 2001
+    - ESX Server
+      - type-1 hypervisor
+    - GSX Server
+      - type-2 hypervisor
+
+**Java Virtual Machine - the early 1990s**
+
+- Sun Microsystems begins Project Stealth in 1990
+  - Also known as Oak and Web Runner
+  - In 1995, project officially becomes Java
+    - Targeted toward WWW
+    - Write application once, run anywhere
+      - Java Run-time Environment (JRE)
+      - Complies application, just in time (JIT)
+      - Developer doesn't have to worry about the operating system, just write the code
+  - Java Virtual Machine
+    - Small operating system, a "virtual machine"
+    - Runs the Java application
+
+**Hardware-assisted Virtualization - 2005/2006**
+
+*"In computing, hardware-assisted virtualization is a platform virtualization approach that enables efficient full virtualization using help from hardware capabilities, primarily from the host processors. A full virtualization is used to simulate a complete hardware environment, or virtual machine, in which an unmodified guest operating system (using the same instruction set as the host machine) effectively executes in complete isolation. Hardware-assisted virtualization was added to x86 processors (Intel VT-x or AMD-V) in 2005 and 2006 (respectively)." --Wikipedia*
+
+In short, hardware virtualization is where we add features to the CPU that assist and accelerate virtualization by moving these functions from the software (hypervisor) to the hardware (CPU).
+
+- Intel Virtualization (VT-x)
+  - CPU flag for VT-x capability is "vmx"
+    - `grep -i vmx /proc/cpuinfo`
+  -"VMX" stands for Virtual Machine Extensions
+    - Adds 13 new instructions
+    - Guest OS perceives itself as running with full privilege
+      - Host os remains protected
+  - Extended Page Tables (EPT)
+    - Intel technology for the memory management unit (MMU)
+- AMD Virtualization (AMD-V)
+  - CPU flag for AMD-V capability is "svm"
+    - AMD Secure Virtual Machine, later AMD-V
+    - `grep -i svm /proc/cpuinfo`
+  - Rapid Virtualization Indexing (RVI)
+    - AMD technology for the processor memory management unit (MMU)
+
+#### How Does Virtualization Work?
+
+Virtualization creates a "virtual machine" for the guest operating system to live within, with virtual resources instead of physical resources. Physical resources can also be mapped to a guest where necessary.
+
+#### What is a Hypervisor?
+
+***A hypervisor is software that sits between the guest (virtual machine) operating system and either the hardware itself or another operating system (host)***
+
+**The hypervisor provides the resources that the guest operating system requires**
+
+- Virtual CPU(s)
+- Virtual Memory
+- Virtual Disk(s)
+- Virtual Networking
+- Other resources
+  - Virtual media
+    - CD/DVD/ISO images
+    - USB
+    - Sound
+  - Video
+- Mapped physical resources
+  - Networking
+    - IP
+    - Storage
+  - GPU(s)
+
+***Type-1 vs Type-2 Hypervisors***
+
+- **Type-1 Hypervisor**
+  - Sits directly on the hardware
+  - It *is* the host "operating system"
+  - Example: *VMWare ESX*
+- **Type-2 Hypervisor**
+  - Runs on top of a host operating system
+  - Example: *VirtualBox*
+
+#### Types of Virtualization
+
+**Server / Operating System Virtualization**
+
+- Run multiple operating systems on one or more physical server(s)
+  - More efficient hardware utilization
+    - Consolidate workloads for efficiency
+  - Virtual machine is independent of the hardware
+  - Virtual machines can be moved around for hardware maintenance, with minimal disruption
+  - Virtual machines can be replicated to remote datacenters or the cloud
+    - Disaster recovery
+    - Capacity needs
+  - Single means of managing servers
+  - Automation
+    - Deployment
+    - Lifecycle management
+
+**Desktop Virtualization**
+
+- Virtual Desktop Infrastructure (VDI)
+  - Separate the desktop environment from physical hardware
+  - Provide access to desktop environment
+    - Client software
+    - Web browser
+  - Many users on one physical machine
+  - Consolidate compute and storage
+    - More efficient use of hardware and storage
+    - Valuable company data lives in the data center
+      - Redundancy
+      - Backup
+      - Ownership
+  - Similar to server virtualization, but different management tools and methodology
+  - Popular solutions include
+    - VMWare Horizon
+    - Citrix Virtual Apps and Desktops
+      - Formerly XenApp and XenDesktop
+    - Microsoft
+      - Hyper-V VDI
+      - Windows Virtual Desktop (Azure)
+
+**Application Virtualization**
+
+- Containers
+  - Lightweight version of virtualization
+    - Multiple isolated user-space instances
+  - Only provide the bare minimum needed, not a full OS install
+  - Looks like "real", full operating systems
+  - Certain parts of host operating system are shared
+  - Examples
+    - Docker
+    - LXC
+    - Solaris Containers
+    - FreeBSD jail(s)
+    - chroot jail(s)
+
+**Network (Function) Virtualization**
+
+- Virtual representation of physical networking components
+  - Logical ports
+  - Switches
+  - Routers
+  - VPN(s)
+  - Firewalls
+  - Load Balancers(s)
+- Fast and easy to deploy
+- Can be deployed alongside virtual servers
+  - Deploy an entire unit of virtual infrastructure at the same time
+    - Automation
+    - Scaling
+
+#### In this lesson, we covered:
+
+- What virtualization is
+- A brief history of virtualization
+- How virtualization works
+- What a hypervisor is
+  - Type-1 vs Type-2 hypervisors
+- Different types of virtualization

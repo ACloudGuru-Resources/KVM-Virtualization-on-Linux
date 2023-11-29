@@ -1,0 +1,108 @@
+Now that we've finished configuring our oVirt environment let's take a look at some common management tasks.  We're going to add a local internal user, take a look at Events, create a template from the oVirt Image Repository, and take a look at how we perform maintenance on oVirt hosts.
+
+#### Reference Links
+
+**Adding Users:**
+[Users and Roles \| oVirt](https://www.ovirt.org/documentation/admin-guide/chap-Users_and_Roles.html)
+[AAA JDBC \| oVirt](https://www.ovirt.org/develop/release-management/features/infra/aaa-jdbc.html)
+
+### Managing the oVirt Environment
+
+#### Connect to the oVirt Engine Web Interface
+
+In a web browser, navigate to `https://manager-fqdn`, replacing `manager-fqdn` with the FQDN for your oVirt hosted engine.  If you're not already logged in, log in with the `admin` user and the password you set when you configured the hosted engine.  Enter the *Administration Portal*.
+
+#### Adding a New Internal User
+
+Most of the time, we will manage oVirt users in an external directory service, such as *Active Directory* or *LDAP*.  Since standing up and populating an external directory server is outside of this course's scope, let's take a look at managing internal users in oVirt.
+
+1. Our WMS team needs a user to manage their virtual machines via the *VM Portal*.  We will create a new `Internal` user named `cloud_user` for them to use, for now, using the `ovirt-aaa-jdbc-tool`.
+
+2. In order to use the command-line utility `ovirt-aaa-jdbc-tool`, we will need to make an SSH connection as `root` to the hosted engine.  Log in with the password you created for the `root` user when you configured the hosted engine.
+
+3. Now we can create a new `cloud_user` user:
+    ```
+    ovirt-aaa-jdbc-tool user add cloud_user --attribute=firstName=Cloud --attribute=lastName=User --attribute=email=cloud_user@testdomain.com
+    ```
+4. We need to set a password for the `cloud_user` user:
+    ```
+    ovirt-aaa-jdbc-tool user password-reset cloud_user --password-valid-to="2025-08-15 10:30:00Z"
+    ```
+5. Let's check our work:
+    ```
+    ovirt-aaa-jdbc-tool user show cloud_user
+    ```
+6. Go ahead and log out of your SSH connection:
+    ```
+    exit
+    ```
+
+7. You should be logged in to the oVirt web interface as `admin`.  If you are not, log out and log back in as `admin`.
+
+8. Navigate to *Administration*, then *Users*, and click on `cloud_user`.  Click on the **Permissions** tab.  Click on the **Add System Permissions** button on the right-hand side.  Assign the `UserRole` and `SuperUser` roles, then click **OK**.
+
+9. Log out as the `admin` user and log back in with `cloud_user`.
+
+#### Managing Events
+
+**Events:**
+
+- Alert us when issues occur
+- Provide a running log of activity
+- Are searchable
+
+In order to access *Events*, click on it on the left-hand side:
+
+1. Take a look around
+2. Search for events
+3. Sort events
+4. Bookmark a search
+
+#### Create a Template from the oVirt Image Repository
+
+One resource that is available to us with the default installation of oVirt is the `ovirt-image-repository`.
+
+From *ovirt.org*:
+
+"OpenStack Image Service provides a catalog of virtual machine images. In oVirt, these images can be imported into the oVirt Engine and used as floating disks or attached to virtual machines and converted into templates."
+
+1. Navigate to *Storage* and then select **Domains**.  Click on the `ovirt-image-repository`.
+
+2. Choose the `CentOS 7 Generic Cloud Image` (the latest), highlight it and click on the **Import** button in the upper right-hand corner.  
+3. Select **Import as Template** and give your template a name.  We will use the template later.
+4. Import Images:
+    - *Data Center:* Default
+    - *Domain name:* VM_Storage
+    - *Import as Template:* Checked
+
+5. Click **OK**.  
+6. Navigate to *Compute* and then to *Templates*.  
+
+After the import process is complete, you will see your new template.
+
+#### Performing Maintenance on the Second Host
+
+Sometimes you will need to take a host out of the rotation to perform maintenance or deal with an outage.  We're going to perform some maintenance on our second host.
+
+1. Navigate to *Computer*, and then to *Hosts*.  Highlight the second host.  
+2. Select the drop-down menu from *Management* and then select **Maintenance**.  This will put your host into maintenance mode.
+
+3. Make an SSH connection to the second host as `cloud_user` and then patch the system:
+    ```
+    sudo yum -y update
+    ```
+4. After patching, reboot:
+    ```
+    sudo systemctl reboot
+    ```
+5. Observe the oVirt *Hosts* page as the second host comes back up.  
+6. When the host is back up, make sure the host is highlighted and select the drop-down menu from *Management* and then select **Activate**.  
+
+This will bring the host back into oVirt as active.  You should see a green triangle pointing up on the left side of the hosts' entry in the host list.
+
+### In this lesson, we covered:
+
+- Adding a New User
+- Managing Events
+- Creating a Template from the oVirt Image Repository
+- Performing Maintenance on a Second Host

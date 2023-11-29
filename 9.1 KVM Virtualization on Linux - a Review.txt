@@ -1,0 +1,179 @@
+In this course, we’ve explored KVM Virtualization on Linux from four perspectives.  Let's review what we covered.
+
+### Lesson - KVM Virtualization on Linux - A Review
+
+#### What is Virtualization?
+
+In the past, in x86/x64 computing, what we thought of as a SERVER or HOST was made up of:
+
+- A hardware component
+- An operating system
+- One or more applications
+
+Virtualization allows you to separate the SOFTWARE component of what we think of as a “server” from the HARDWARE component.
+
+***A virtual machine, from the guest operating system’s perspective, looks like physical hardware.  All the devices that the operating system expects to see, from CPUs to memory, disks to network cards, video to BIOS, is there.***
+
+#### What Is a Hypervisor?
+
+A hypervisor is software that sits between the guest (virtual machine) operating system and either the hardware itself or another operating system (host).
+
+The HYPERVISOR SOFTWARE provides the resources the operating system expects to see, through either emulation or paravirtualization.  The guest operating system is installed in the virtual machine just as if you were performing an installation on bare metal hardware.  You might have to install some drivers to get full functionality, just as on bare metal.
+
+##### The hypervisor provides the resources that the guest operating system requires:
+
+- Virtual CPU(s)
+- Virtual Memory
+- Virtual Disk(s)
+- Virtual Networking
+- Mapped physical resources:
+  - Networking:
+    - IP
+    - Storage
+  - GPU(s)
+- Other resources:
+  - Virtual media:
+    - CD/DVD/ISO images
+    - USB
+  - Sound
+  - Video
+
+#### Type-1 vs. Type-2 Hypervisors
+
+**Type-1 Hypervisor:**
+
+- Sits directly on the hardware
+- It is the host operating system
+  - Example: VMWare ESX / KVM
+
+**Type-2 Hypervisor:**
+
+- Runs on top of a host operating system
+  - Example: VirtualBox / QEM
+
+#### What Is KVM?
+
+Kernel-based Virtual Machine (KVM) is a Linux Kernel Module that allows the kernel to function as a Type-1 hypervisor.  KVM requires hardware virtualization extensions, such as Intel VT-x or AMD-V.
+
+#### What Is QEMU?
+
+QEMU is a type-2 hypervisor that runs in user space. When used with KVM, it accelerates the performance of a QEMU guest, and the combination becomes a type-1 hypervisor.
+
+#### What Is libvirt?
+
+Libvirt is a toolkit to manage virtualization platforms.  It allows mixing and matching of many management utilities/frameworks with many different hypervisors.
+
+#### How Does It Work?
+
+- **KVM:** Provides acceleration through access to hardware virtualization extensions
+- **QEMU:** Type-2 hypervisor that utilizes KVM for type-1 hypervisor acceleration
+- **libvirt:** Toolkit to manage virtualization platforms, like QEMU/KVM
+
+#### In this course, we’ve explored KVM Virtualization on Linux from four perspectives:
+
+- Workstation virtualization using CentOS 8
+  - Virtual Machine Manager
+    - virt-manager
+- Web-based administration using CentOS 8
+  - Cockpit
+  - Web Console
+- CLI administration using CentOS 8
+- Explored oVirt on CentOS 7
+
+#### Virtual Machine Manager
+
+**From the Virtual Machine Manager website:**
+
+"The virt-manager application is a desktop user interface for managing virtual machines through libvirt. It primarily targets KVM VMs but also manages Xen and LXC (Linux containers). It presents a summary view of running domains, their live performance, and resource utilization statistics. Wizards enable the creation of new domains, and configuration and adjustment of a domain’s resource allocation and virtual hardware. An embedded VNC and SPICE client viewer presents a full graphical console to the guest domain."
+
+#### Cockpit/Web Console
+
+**From the Cockpit Project website:**
+
+“The easy-to-use, integrated, glanceable, and open web-based interface for your servers.”
+
+***Cockpit and Web Console are the same thing. Cockpit is the upstream project that feeds Web Console in the RHEL offering.***
+
+**How does Cockpit work?**
+
+Cockpit runs in user space and leverages a plugin to use libvirt to access the underlying hypervisor. Because of this, Cockpit doesn’t have to know how to “talk to” the hypervisor — it only has to communicate with libvirt via the libvirtd service.
+
+**How does Cockpit plugin work?**
+
+“Access to Libvirtd is wrapped either by the virsh tool or libvirt D-Bus API bindings, depending if the latter is installed on the system.”
+— Cockpit Project
+
+#### CLI - Using 'virsh'
+
+**Why use CLI utilities?**
+
+- More control than other methods
+- Enable scripting/automation
+- No GUI/web browser required:
+  - Less overhead
+  - Easier to access the CLI
+- Many management utilities leverage virsh:
+  - Easier to troubleshoot issues
+
+**From the libvirt website:**
+
+“The virsh program is the main interface for managing virsh guest domains.”
+
+***'virsh' is installed when you install the libvirt package***
+
+**Interacting with virsh:**
+
+You can use virsh in one of two ways:
+- From the Linux shell
+- As its own interactive shell:
+  - The virsh shell
+
+#### oVirt
+
+**From the oVirt website:**
+
+“oVirt is an open-source distributed virtualization solution, designed to manage your entire enterprise infrastructure. oVirt uses the trusted KVM hypervisor and is built upon several other community projects, including libvirt, Gluster, PatternFly, and Ansible.”
+
+What's included?
+- Rich web-based user interfaces for both admin and non-admin users
+- Integrated management of hosts, storage, and network configuration
+- Live migration of virtual machines and disks between hosts and storage
+- High availability of virtual machines in the event of host failure
+
+**oVirt:**
+
+- oVirt is built on libvirt/QEMU/KVM
+- oVirt is the upstream of RHEV
+
+**oVirt can:**
+
+- Create, edit, start, and stop guest VMs
+- Move guest VMs between hosts
+- Provide console access for guest VMs
+- Provide operating metrics for guest VMs
+- Display the current status of guest VMs
+- Manage virtual networks
+- Manage virtual storage
+- Provide disaster recovery
+- More
+
+***oVirt is made up of two components:***
+
+**oVirt engine:**
+
+- Standalone or self-hosted
+- Java backend
+- GWT web toolkit frontend
+- WildFly (JBoss) application server
+- PostgreSQL database
+
+**oVirt node:**
+
+- RHEL/CentOS (predominantly)
+- QEMU/KVM/libvirt
+- VDSM
+  - Node management API
+- Gluster/PatternFly/Ansible
+- Nodes can be clustered
+
+### In this course, we’ve aspired to provide an interesting journey through four scenarios that use KVM Virtualization on Linux.  We hope you enjoyed it!

@@ -1,0 +1,77 @@
+Now that we have some virtual machines let's take a look at how we can manage them using oVirt.  We're going to use the Administration Portal and the VM Portal to perform some reconfiguration of our CentOS 7 and 8 virtual machines.
+
+#### Reference Links
+
+[oVirt Virtual Machine Management Guide \| oVirt](https://www.ovirt.org/documentation/vmm-guide/Virtual_Machine_Management_Guide.html)
+
+### Managing a Virtual Machine Using oVirt
+
+#### Connect to oVirt Engine Web Interface
+
+In a web browser, navigate to `https://manager-fqdn`, replacing **'manager-fqdn'** with the FQDN for your oVirt hosted engine.  If you're not already logged in, log in with the `admin` user and the password you set when you configured the hosted engine.  Enter the **Administration Portal**
+
+#### Managing the CentOS 7 virtual machine using the oVirt Administration Portal
+
+1. Navigate to *Compute*, then *Virtual Machines8*.  
+2. Click on `centos-7-wms1-chicago`.
+3. We're going to add a second network interface.  Click on the *Network Interfaces* tab and then click on the **New** button in the upper right-hand corner.  You can use the default name of `nic2` and connect to any Profile you want. Click **OK**.
+4. Let's add a second disk.  Click on the *Disks* tab, then click on the **New** button in the upper right-hand corner.  Configure the size as you wish, leave the rest as defaults, then click **OK**.
+5. Let's take a snapshot.  Click on the *Snapshots* tab, then click on **Create** in the upper right-hand corner.  Name the snapshot `just-in-case`.
+6. Go back to the *General* tab.  Start the VM by clicking on **Run**.
+7. To log in, we will make an SSH connection as `centos` to the IP address of the VM from the machine we provided the public key for, as the user who provided the key.
+
+#### Let's Check our Work:
+
+1. List all the disks on the system:
+    ```
+    sudo fdisk -l
+    ```
+    We should see two.
+2. Check out the network interfaces:
+    ```
+    ip addr
+    ```
+    We should also see two.
+
+3. Log out of the `centos-7-wms1-chicago` virtual machine.
+
+#### Managing the CentOS 8 virtual machine using the oVirt VM Portal
+
+1. Go back to the main oVirt page by clicking on **oVirt** in the upper left-hand corner.  
+2. Enter the **VM Portal**.
+3. Click on the `centos-8-wms1-chicago` VM.
+4. We're going to add a second disk.  Navigate over to *Disks* and click on the **Edit** (pencil) icon.  
+5. Click on **Create Disk**.  This will open the *Create New Disk* wizard.  
+6. Set the size as you deem fit, choose the storage domain, and then click **OK**.  Click on the checkmark.
+
+Let's edit the memory and CPUs on this VM.  
+
+1. Click on the pencil icon in the *Details* section.  
+2. Adjust the Total Virtual CPUs and Memory as you see fit.  Click on the checkmark.
+3. Click on the **Reboot** button in the upper right-hand corner, so our changes will be applied.
+4. Once the VM has been rebooted, click on the **Console** button in the upper right-hand corner.  
+5. Log in as the `cloud_user` user.
+
+#### Let's Check our Work:
+
+1. Confirm the amount of memory configured:
+    ```
+    grep MemTotal /proc/meminfo
+    ```
+2. Confirm the number of CPUs:
+    ```
+    grep -i processor /proc/cpuinfo | wc -l
+    ```
+3. Confirm that we have two virtual disks:
+    ```
+    sudo fdisk -l
+    ```
+4. Log out.  Close the Remote Viewer.  Shut down the VM.
+5. Go back to *Virtual Machines*.  
+6. Select the `centos-7-wms1-chicago` guest and shut down this VM as well.
+7. Log out of oVirt.
+
+### In this lesson, we covered:
+
+- Managing the CentOS 7 virtual machine using the oVirt Administration Portal
+- Managing the CentOS 8 virtual machine using the oVirt VM Portal
